@@ -2,3 +2,5 @@
 *.vcxproj
 *.filters
 *.user
+.vs\
+Debug\
