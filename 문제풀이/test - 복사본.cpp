@@ -35,10 +35,10 @@ void calc_parents() {
 void HLD(int cur, int bef, int idx) {
 	int high = 0;
 	for (auto i : chlds[cur])
-		if (heavy[i] > heavy[high]) 
+		if (heavy[i] > heavy[high])
 			high = i;
 	for (auto i : chlds[cur]) {
-		if(i == high)
+		if (i == high)
 			HLD(high, cur, idx);
 		else
 			HLD(i, cur, ++divtree_size);
@@ -56,7 +56,7 @@ int seg(int l, int r, int idx, int tree_idx) {
 		seg((l + r) / 2 + 1, r, idx * 2 + 1, tree_idx));
 }
 void make_segtree() {
-	for (int i = 0; i < divtree_size+1; i++) {
+	for (int i = 0; i < divtree_size + 1; i++) {
 		if (divtrees[i].size() == 1) continue;
 		segtrees[i].resize(divtrees[i].size() * 4);
 		seg(1, divtrees[i].size() - 1, 1, i);
@@ -133,13 +133,8 @@ int main()
 	long start = clock();
 	maketree(1, 0);
 	long end = clock();
-	printf("maketree: %.3lf\n", (end - start)/(double)CLOCKS_PER_SEC);
-
-	start = clock();
+	printf("maketree: %.3lf\n", (end - start) / (double)CLOCKS_PER_SEC);
 	calc_parents();
-	end = clock();
-	printf("calc_par: %.3lf\n", (end - start) / (double)CLOCKS_PER_SEC);
-
 	start = clock();
 	HLD(1, 0, divtree_size);
 	end = clock();
@@ -151,6 +146,7 @@ int main()
 	//	}
 	//	printf("\n");
 	//}
+	//return 0;
 
 	start = clock();
 	make_segtree();
@@ -166,27 +162,23 @@ int main()
 	double quer = 0, updat = 0;
 	FILE *fp2 = fopen("C:\\output.txt", "r");
 	fscanf(fp, "%d", &m);
+	//scanf("%d", &m);
 	for (int i = 0; i < m; i++) {
 		int a, b, c;
 		fscanf(fp, "%d%d%d", &a, &b, &c);
+		//scanf("%d%d%d", &a, &b, &c);
 
 		if (a == 2) {
 			start = clock();
-			int lca = LCA(b, c);
-			int res;
-			if (b == c)
-				res = 0;
-			else if (b == lca)
-				res = query(c, lca);
-			else if (c == lca)
-				res = query(b, lca);
-			else
-				res = max(query(b, lca), query(c, lca));
+			int res = query(b, c);
+			end = clock();
+			quer += ((end - start) / (double)CLOCKS_PER_SEC);
+
 			int tmp;
 			fscanf(fp2, "%d", &tmp);
 			if (res == tmp) printf("O");
 			else printf("X");
-
+			//printf("res = %d\n", res);
 				/*printf("\nX query #%d a,b,c=%d,%d,%d, res=%d, cor = %d\n", i, a, b, c, res, tmp);
 				printf("weights = ");
 				for (auto i : node_weights)
@@ -210,9 +202,7 @@ int main()
 				for (auto i : segtrees[segtree_idx[c]])
 					printf("%d, ", i);
 				printf("\n");*/
-			
-			end = clock();
-			quer += ((end - start) / (double)CLOCKS_PER_SEC);
+
 		}
 		if (a == 1) {
 			start = clock();

@@ -1,9 +1,10 @@
-#include <iostream>
+#include <cstdio>
 #include <vector>
 #include <list>
 #include <algorithm>
+#include <ctime>
 using namespace std;
-int n, m, u, v, w, divtree_size = 0;
+int n, m, u, v, w, divtree_size, c;
 typedef struct pair<int, int> ii;
 typedef struct {
 	int st, ed, weight;
@@ -20,11 +21,11 @@ void maketree(int cur, int bef) {
 		chlds[cur].push_back(i.first);
 		node_edge_idx[i.second] = i.first;
 		node_weights[i.first] = e[i.second].weight;
-		parents[i.first][0] = cur;
 		maketree(i.first, cur);
 		heavy[cur] += heavy[i.first];
 	}
-	++heavy[cur];
+	parents[cur][0] = bef;
+	heavy[cur]++;
 }
 void calc_parents() {
 	for (int j = 1; j < 20; j++)
@@ -79,16 +80,6 @@ int small_query(int st, int ed, int l, int r, int cur, int tree_idx) {
 		small_query(st, ed, l, (l + r) / 2, cur * 2, tree_idx),
 		small_query(st, ed, (l + r) / 2 + 1, r, cur * 2 + 1, tree_idx));
 }
-int query(int st, int ed) {
-	int ret = 0, idx, high;
-	while (true) {
-		idx = segtree_idx[st], high = divtrees[idx].back();
-		if (level[ed] >= level[parents[high][0]]) break;
-		ret = max(ret, small_query(idx_in_divtree[st], idx_in_divtree[high], 1, divtrees[idx].size() - 1, 1, idx));
-		st = parents[high][0];
-	}
-	return max(ret, small_query(idx_in_divtree[st], idx_in_divtree[high], 1, divtrees[idx].size() - 1, 1, idx));
-}
 int LCA(int a, int b) {
 	if (level[a] < level[b]) swap(a, b);
 	int i;
@@ -106,10 +97,42 @@ int LCA(int a, int b) {
 	}
 	return a;
 }
+int query(int st, int ed) {
+	int lca = LCA(st, ed);
+	int ret = 0, idx, last;
+	if (st != lca) {
+		while (true) {
+			idx = segtree_idx[st];
+			last = divtrees[idx].back();
+			if (level[last] <= level[lca] + 1) break;
+			ret = max(ret, small_query(idx_in_divtree[st], idx_in_divtree[last], 1, divtrees[idx].size() - 1, 1, idx));
+			st = parents[last][0];
+		}
+		if(idx == segtree_idx[lca])
+			ret = max(ret, small_query(idx_in_divtree[st], idx_in_divtree[lca] - 1, 1, divtrees[idx].size() - 1, 1, idx));
+		else
+			ret = max(ret, small_query(idx_in_divtree[st], divtrees[idx].size() - 1, 1, divtrees[idx].size() - 1, 1, idx));
+	}
+	if (ed != lca) {
+		while (true) {
+			idx = segtree_idx[ed];
+			last = divtrees[idx].back();
+			if (level[last] <= level[lca] + 1) break;
+			ret = max(ret, small_query(idx_in_divtree[ed], idx_in_divtree[last], 1, divtrees[idx].size() - 1, 1, idx));
+			ed = parents[last][0];
+		}
+		if (idx == segtree_idx[lca])
+			ret = max(ret, small_query(idx_in_divtree[ed], idx_in_divtree[lca] - 1, 1, divtrees[idx].size() - 1, 1, idx));
+		else
+			ret = max(ret, small_query(idx_in_divtree[ed], divtrees[idx].size() - 1, 1, divtrees[idx].size() - 1, 1, idx));
+	}
+	return ret;
+}
 
 int main()
 {
-	scanf("%d", &n);
+	FILE *fp = fopen("C:\\input.txt", "r");
+	fscanf(fp, "%d", &n);
 	adj.resize(n + 1),
 		level.assign(n + 1, 0),
 		heavy.assign(n + 1, 0),
@@ -123,40 +146,78 @@ int main()
 		chlds.resize(n + 1);
 
 	for (int i = 1; i < n; i++) {
-		scanf("%d%d%d", &e[i].st, &e[i].ed, &e[i].weight);
+		fscanf(fp, "%d%d%d", &e[i].st, &e[i].ed, &e[i].weight);
 		adj[e[i].st].push_back({ e[i].ed, i });
 		adj[e[i].ed].push_back({ e[i].st, i });
 	}
-	maketree(1, 0);
-	calc_parents();
-	HLD(1, 0, divtree_size);
 
+	long start = clock();
+	maketree(1, 0);
+	long end = clock();
+	printf("maketree: %.3lf\n", (end - start) / (double)CLOCKS_PER_SEC);
+	calc_parents();
+	start = clock();
+	HLD(1, 0, divtree_size);
+	end = clock();
+	printf("HLD: %.3lf\n", (end - start) / (double)CLOCKS_PER_SEC);
+	//printf("Divtrees = \n");
+	//for (auto i : divtrees) {
+	//	for (auto j : i) {
+	//		printf("%d, ", j);
+	//	}
+	//	printf("\n");
+	//}
+	//return 0;
+
+	start = clock();
 	make_segtree();
-	scanf("%d", &m);
+	end = clock();
+	printf("make segtree: %.3lf\n", (end - start) / (double)CLOCKS_PER_SEC);
+	//printf("Segtrees = \n");
+	//for (auto i : segtrees) {
+	//	for (auto j : i) {
+	//		printf("%d, ", j);
+	//	}
+	//	printf("\n");
+	//}
+	double quer = 0, updat = 0;
+	FILE *fp2 = fopen("C:\\output.txt", "r");
+	fscanf(fp, "%d", &m);
+	//scanf("%d", &m);
 	for (int i = 0; i < m; i++) {
 		int a, b, c;
-		scanf("%d%d%d", &a, &b, &c);
+		fscanf(fp, "%d%d%d", &a, &b, &c);
+		//scanf("%d%d%d", &a, &b, &c);
 
 		if (a == 2) {
-			int lca = LCA(b, c);
-			int res;
-			if (b == c)
-				res = 0;
-			else if (b == lca)
-				res = query(c, lca);
-			else if (c == lca)
-				res = query(b, lca);
-			else
-				res = max(query(b, lca), query(c, lca));
-			printf("%d\n", res);
+			start = clock();
+			int res = query(b, c);
+			end = clock();
+			quer += ((end - start) / (double)CLOCKS_PER_SEC);
+
+			int tmp;
+			fscanf(fp2, "%d", &tmp);
+			if (res == tmp) printf("O");
+			else printf("X");
+			//printf("res = %d\n", res);
 		}
 		if (a == 1) {
+			start = clock();
 			int node = node_edge_idx[b];
 			int idx = segtree_idx[node];
 			update(1, divtrees[idx].size() - 1, idx_in_divtree[node], c, 1, idx);
 			node_weights[node] = c;
+
+			end = clock();
+			updat += ((end - start) / (double)CLOCKS_PER_SEC);
 		}
 	}
+
+	printf("query: %.3lf\n", quer);
+	printf("update: %.3lf\n", updat);
+
+	fclose(fp);
+	fclose(fp2);
 	return 0;
 }
 /*
