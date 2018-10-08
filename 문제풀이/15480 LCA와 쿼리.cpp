@@ -2,63 +2,59 @@
 #include <vector>
 #include <list>
 #include <algorithm>
-#include <ctime>
 using namespace std;
-int n, m, u[100001], v[100001], w[100001], heavy[100001], divtree_size = 1;
-int starts[100001], parents[100001];
-vector<list<int>> adj;
-vector<int> segtree, segtree_idx, idx_in_divtree, divtrees;
+int n, m, u[100001], v[100001], parent[100001][20], level[100001];
+vector<list<int>> adj(100001);
 void maketree(int cur, int bef) {
-	for (int i : adj[cur]) {
+	level[cur] = level[bef] + 1;
+	for (int i : adj[cur])
 		if (bef ^ i) 
-			maketree(i, cur), heavy[cur] += heavy[i];
-	}
-	parents[cur] = bef;
-	heavy[cur]++;
+			maketree(i, cur);
+	parent[cur][0] = bef;
 }
-void HLD(int cur, int bef) {
-	int high = 0;
-	for (int i : adj[cur])
-		if (i ^ bef && heavy[i] > heavy[high])
-			high = i;
-	for (int i : adj[cur])
-		if (i ^ bef && i ^ high)
-			starts[i] = i, HLD(i, cur);
-	if (high != 0)
-		starts[high] = starts[cur], HLD(high, cur);
-	divtrees[divtree_size] = cur;
-	idx_in_divtree[cur] = divtree_size++;
+void preproc() {
+	for (int j = 1; j < 20; j++)
+		for (int i = 1; i <= n; i++)
+			parent[i][j] = parent[parent[i][j - 1]][j - 1];
 }
-int query(int st, int ed) {
-	int ret = 0;
-	while (starts[st] != starts[ed]) {
-		if (heavy[starts[st]] > heavy[starts[ed]])
-			swap(st, ed);
-		st = parents[starts[st]];
+int LCA(int a, int b) {
+	if(level[a] < level[b]) 
+		swap(a, b);
+	int i;
+	while (level[a] != level[b]) {
+		i = -1;
+		while (level[parent[a][i + 1]] >= level[b])
+			++i;
+		a = parent[a][i];
 	}
-	if (heavy[st] > heavy[ed]) swap(st, ed);
+	while (a != b) {
+		i = 0;
+		while (parent[a][i + 1] != parent[b][i + 1])
+			++i;
+		a = parent[a][i], b = parent[b][i];
+	}
+	return a;
+}
+int query(int a, int b, int c) {
+	int ret = LCA(a, b), lca2 = LCA(b, c), lca3 = LCA(c, a);
+	if (level[ret] < level[lca2]) ret = lca2;
+	if (level[ret] < level[lca3]) ret = lca3;
 	return ret;
 }
 int main()
 {
 	scanf("%d", &n);
-	adj.resize(n + 1),
-		idx_in_divtree.resize(n + 1),
-		segtree_idx.assign(n + 1, -1),
-		divtrees.resize(n + 1),
-		segtree.resize(n * 4);
-	starts[0] = starts[1] = parents[0] = parents[1] = 1;
 	for (int i = 1; i < n; i++) {
-		scanf("%d%d%d", u + i, v + i, w + i);
+		scanf("%d%d", u + i, v + i);
 		adj[v[i]].push_back(u[i]), adj[u[i]].push_back(v[i]);
 	}
 	maketree(1, 0);
-	HLD(1, 0);
+	preproc();
 	scanf("%d", &m);
 	for (int i = 0; i < m; i++) {
 		int a, b, c;
 		scanf("%d%d%d", &a, &b, &c);
-		printf("%d\n", query(b, c));
+		printf("%d\n", query(a,b,c));
 	}
 	return 0;
 }
