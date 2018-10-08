@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b961370d-da7e-4e32-a26d-27140084756a</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>testcase.py</StartupFile>
+    <StartupFile>n random array.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -21,7 +21,10 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="testcase.py" />
+    <Compile Include="n random array.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tree.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
