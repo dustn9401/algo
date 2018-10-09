@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b961370d-da7e-4e32-a26d-27140084756a</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>n random array.py</StartupFile>
+    <StartupFile>tree.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>

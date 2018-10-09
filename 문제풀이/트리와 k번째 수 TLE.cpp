@@ -6,10 +6,9 @@ using namespace std;
 int n, m, u[100001], v[100001], w[100001], level[100001], heavy[100001], divtree_size = 1;
 int starts[100001], parents[100001], idx[100001], divtrees[100001], lower, upper;
 vector<vector<int>> adj(100001), segtree(400000);
-//vector<int> idx(100001), divtrees(100001);
 void tree_init(int s, int e, int i) {
 	if (s == e) {
-		segtree[i].push_back(w[s]);
+		segtree[i].push_back(w[divtrees[s]]);
 		return;
 	}
 	int l = i * 2, r = i * 2 + 1;
@@ -51,15 +50,15 @@ void HLD(int cur, int bef) {
 }
 void very_small_query(int s, int e, int l, int r, int idx, int x)
 {
-	if (s > r || e < l)
+	if (r < s || e < l)
 		return;
-	if (s >= l && e <= r) {
+	if (l >= s && r <= e) {
 		lower += distance(segtree[idx].begin(), lower_bound(segtree[idx].begin(), segtree[idx].end(), x));
 		upper += distance(segtree[idx].begin(), upper_bound(segtree[idx].begin(), segtree[idx].end(), x));
 		return;
 	}
-	very_small_query(s, (s + e) / 2, l, r, idx * 2, x);
-	very_small_query((s + e) / 2 + 1, e, l, r, idx * 2 + 1, x);
+	very_small_query(s, e, l, (l+r)/2, idx * 2, x);
+	very_small_query(s, e, (l+r)/2+1, r, idx * 2 + 1, x);
 }
 void small_query(int s, int e, int k) {
 	while (starts[s]^starts[e]) {
@@ -69,7 +68,7 @@ void small_query(int s, int e, int k) {
 		s = parents[starts[s]];
 	}
 	if (heavy[s] > heavy[e]) swap(s, e);
-	very_small_query(idx[s], idx[e] - 1, 1, divtree_size - 1, 1, k);
+	very_small_query(idx[s], idx[e], 1, divtree_size - 1, 1, k);
 }
 int query(int s, int e, int k) {
 	long long ret = 0, lo = -2147483647, hi = 2147483647;
@@ -103,6 +102,7 @@ int main()
 		adj[u[i]].push_back(v[i]);
 	}
 	build();
+	printf("build\n");
 	for (int i = 0; i < m; i++) {
 		int x, y, k;
 		scanf("%d%d%d", &x, &y, &k);
@@ -111,6 +111,20 @@ int main()
 	return 0;
 }
 /*
+13 100
+1 2 3 4 5 6 7 8 9 10 11 12 13
+1 2
+1 11
+2 3
+2 7
+11 12
+11 13
+3 4
+3 5
+7 8
+7 9
+5 6
+8 10
 문제
 1번부터 N번까지 번호가 붙여진 N개의 정점과 N-1개의 간선으로 구성된 트리가 있다.
 트리의 각 정점에는 가중치가 있다. 이때 M개의 질문에 대해 다음의 연산을 수행해야 한다.
