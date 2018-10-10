@@ -1,17 +1,23 @@
 #include <cstdio>
-#include <ctime>
 #include <vector>
 #include <list>
 #include <algorithm>
 using namespace std;
-int n, m, u[100001], v[100001], w[100001], level[100001], heavy[100001], divtree_size = 1;
+int n, m, divtree_size = 1;
 int starts[100001], parents[100001], idx[100001], divtrees[100001], lower, upper;
 long st, ed;
-double bs;
+vector<int> u(100001), v(100001), w(100001), level(100001), heavy(100001), cw(100001), sw, cwi(100001);
 vector<vector<int>> adj(100001), segtree(400000);
+void compress() {
+	sort(sw.begin(), sw.end());
+	for (int i = 1; i <= n; i++) {
+		cw[i] = distance(sw.begin(), lower_bound(sw.begin(), sw.end(), w[i]));
+		cwi[cw[i]] = i;
+	}
+}
 void tree_init(int s, int e, int i) {
 	if (s == e) {
-		segtree[i].push_back(w[divtrees[s]]);
+		segtree[i].push_back(cw[divtrees[s]]);
 		return;
 	}
 	int l = i * 2, r = i * 2 + 1;
@@ -74,7 +80,7 @@ void small_query(int s, int e, int k) {
 	very_small_query(idx[s], idx[e], 1, divtree_size - 1, 1, k);
 }
 int query(int s, int e, int k) {
-	long long ret = 0, lo = -2147483647, hi = 2147483647;
+	long long ret, lo = 0, hi = n;
 	while (true) {
 		lower = upper = 0;
 		if (lo + hi < 0)
@@ -89,38 +95,30 @@ int query(int s, int e, int k) {
 	return ret;
 }
 void build() {
+	compress();
 	maketree(1, 0);
 	HLD(1, 0);
 	tree_init(1, divtree_size - 1, 1);
 }
 int main()
 {
-	FILE *fp = fopen("..\\testcase\\input11932.txt", "r");
-	fscanf(fp, "%d%d", &n, &m);
+	scanf("%d%d", &n, &m);
 	starts[0] = starts[1] = parents[0] = parents[1] = 1;
-	for (int i = 1; i <= n; i++)
-		fscanf(fp, "%d", w + i);
+	for (int i = 1; i <= n; i++) {
+		scanf("%d", &w[i]);
+		sw.push_back(w[i]);
+	}
 	for (int i = 1; i < n; i++) {
-		fscanf(fp, "%d%d", u + i, v + i);
+		scanf("%d%d", &u[i], &v[i]);
 		adj[v[i]].push_back(u[i]);
 		adj[u[i]].push_back(v[i]);
 	}
-
-	st = clock();
 	build();
-	ed = clock();
-	printf("build=%.3f\n", (ed - st) / (double)CLOCKS_PER_SEC);
-
-	double qry = 0;
 	for (int i = 0; i < m; i++) {
 		int x, y, k;
-		fscanf(fp, "%d%d%d", &x, &y, &k);
-		st = clock();
-		query(x, y, k);
-		ed = clock();
-		qry += (ed - st) / (double)CLOCKS_PER_SEC;
+		scanf("%d%d%d", &x, &y, &k);
+		printf("%d\n", w[cwi[query(x, y, k)]]);
 	}
-	printf("query: %.3lf\n", qry);
 	return 0;
 }
 /*

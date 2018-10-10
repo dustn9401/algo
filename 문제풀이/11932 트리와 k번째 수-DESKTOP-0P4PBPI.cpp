@@ -1,10 +1,13 @@
 #include <cstdio>
+#include <ctime>
 #include <vector>
 #include <list>
 #include <algorithm>
 using namespace std;
 int n, m, u[100001], v[100001], w[100001], level[100001], heavy[100001], divtree_size = 1;
 int starts[100001], parents[100001], idx[100001], divtrees[100001], lower, upper;
+long st, ed;
+double bs;
 vector<vector<int>> adj(100001), segtree(400000);
 void tree_init(int s, int e, int i) {
 	if (s == e) {
@@ -91,23 +94,34 @@ void build() {
 	tree_init(1, divtree_size - 1, 1);
 }
 int main()
+
 {
-	scanf("%d%d", &n, &m);
+	FILE *fp = fopen("..\\testcase\\input11932.txt", "r");
+	fscanf(fp, "%d%d", &n, &m);
 	starts[0] = starts[1] = parents[0] = parents[1] = 1;
 	for (int i = 1; i <= n; i++)
-		scanf("%d", w + i);
+		fscanf(fp, "%d", w + i);
 	for (int i = 1; i < n; i++) {
-		scanf("%d%d", u + i, v + i);
+		fscanf(fp, "%d%d", u + i, v + i);
 		adj[v[i]].push_back(u[i]);
 		adj[u[i]].push_back(v[i]);
 	}
+
+	st = clock();
 	build();
-	printf("build\n");
+	ed = clock();
+	printf("build=%.3f\n", (ed - st) / (double)CLOCKS_PER_SEC);
+
+	double qry = 0;
 	for (int i = 0; i < m; i++) {
 		int x, y, k;
-		scanf("%d%d%d", &x, &y, &k);
-		printf("%d\n", query(x, y, k));
+		fscanf(fp, "%d%d%d", &x, &y, &k);
+		st = clock();
+		query(x, y, k);
+		ed = clock();
+		qry += (ed - st) / (double)CLOCKS_PER_SEC;
 	}
+	printf("query: %.3lf\n", qry);
 	return 0;
 }
 /*
