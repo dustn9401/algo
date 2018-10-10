@@ -6,6 +6,8 @@
 using namespace std;
 int n, m, u[100001], v[100001], w[100001], level[100001], heavy[100001], divtree_size = 1;
 int starts[100001], parents[100001], idx[100001], divtrees[100001], lower, upper;
+long st, ed;
+double bs;
 vector<vector<int>> adj(100001), segtree(400000);
 void tree_init(int s, int e, int i) {
 	if (s == e) {
@@ -104,9 +106,9 @@ int main()
 		adj[u[i]].push_back(v[i]);
 	}
 
-	long st = clock();
+	st = clock();
 	build();
-	long ed = clock();
+	ed = clock();
 	printf("build=%.3f\n", (ed - st) / (double)CLOCKS_PER_SEC);
 
 	double qry = 0;
