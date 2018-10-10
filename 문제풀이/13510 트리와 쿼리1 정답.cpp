@@ -73,7 +73,9 @@ int query(int st, int ed) {
 }
 int main()
 {
-	scanf("%d", &n);
+	FILE *fp1 = fopen("..\\testcase\\input13510.txt", "r");
+	FILE *fp = fopen("..\\testcase\\output13510.txt", "w");
+	fscanf(fp1, "%d", &n);
 	adj.resize(n + 1),
 		idx_in_divtree.resize(n + 1),
 		segtree_idx.assign(n + 1, -1),
@@ -84,22 +86,24 @@ int main()
 		node_weights.resize(n+1);
 	starts[0] = starts[1] = parents[0] = parents[1] = 1;
 	for (int i = 1; i < n; i++) {
-		scanf("%d%d%d", u + i, v + i, w + i);
+		fscanf(fp1, "%d%d%d", u + i, v + i, w + i);
 		adj[v[i]].push_back({ u[i], i });
 		adj[u[i]].push_back({ v[i], i });
 	}
 	maketree(1, 0);
 	HLD(1, 0);
 	make_segtree(1, divtree_size - 1, 1);
-	scanf("%d", &m);
+	fscanf(fp1, "%d", &m);
 	for (int i = 0; i < m; i++) {
 		int a, b, c;
-		scanf("%d%d%d", &a, &b, &c);
+		fscanf(fp1, "%d%d%d", &a, &b, &c);
 		if (a == 2)
-			printf("%d\n", query(b, c));
+			fprintf(fp, "%d\n", query(b, c));
 		if (a == 1)
 			update(1, divtree_size - 1, idx_in_divtree[node_edge_idx[b]], c, 1);
 	}
+	fclose(fp);
+	fclose(fp1);
 	return 0;
 }
 /*

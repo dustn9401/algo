@@ -1,6 +1,66 @@
+//#include <iostream>
+//#include <vector>
+//#include <algorithm>
+//#include <ctime>
+//using namespace std;
+//
+//int arr[100001], lower, upper, n, m;
+//vector<int> v;
+//vector<vector<int>> tree;
+//
+//void tree_init(int s, int e, int i) {
+//	if (s == e) {
+//		tree[i].push_back(arr[s]);
+//		return;
+//	}
+//	int l = i * 2, r = i * 2 + 1;
+//	tree_init(s, (s + e) / 2, l);
+//	tree_init((s + e) / 2 + 1, e, r);
+//	auto lt = tree[l].begin(), rt = tree[r].begin(), le = tree[l].end(), re = tree[r].end();
+//	while (lt != le || rt != re) {
+//		if (rt == re)
+//			tree[i].push_back(*lt), lt++;
+//		else if (lt == le)
+//			tree[i].push_back(*rt), rt++;
+//		else {
+//			if (*lt < *rt)
+//				tree[i].push_back(*lt), lt++;
+//			else
+//				tree[i].push_back(*rt), rt++;
+//		}
+//	}
+//}
+//void small_query(int s, int e, int l, int r, int idx, int x)
+//{
+//	if (s > r || e < l)
+//		return;
+//	if (s >= l && e <= r) {
+//		lower += distance(tree[idx].begin(), lower_bound(tree[idx].begin(), tree[idx].end(), x));
+//		upper += distance(tree[idx].begin(), upper_bound(tree[idx].begin(), tree[idx].end(), x));
+//		return;
+//	}
+//	small_query(s, (s + e) / 2, l, r, idx * 2, x);
+//	small_query((s + e) / 2 + 1, e, l, r, idx * 2 + 1, x);
+//}
+//int query(int l, int r, int k) {
+//	int ret = 0, lo = -1000000000, hi = 1000000000;
+//	while (true) {
+//		lower = upper = 0;
+//		if (lo + hi < 0)
+//			ret = (lo + hi - 1) / 2;
+//		else
+//			ret = (lo + hi) / 2;
+//		small_query(1, n, l, r, 1, ret);
+//		if (lower < k && upper >= k)
+//			break;
+//		lower < k ? lo = ret : hi = ret;
+//	}
+//	return ret;
+//}
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <ctime>
 using namespace std;
 
 int arr[100001], lower, upper, n, m;
@@ -16,18 +76,18 @@ void tree_init(int s, int e, int i) {
 	tree_init(s, (s + e) / 2, l);
 	tree_init((s + e) / 2 + 1, e, r);
 	auto lt = tree[l].begin(), rt = tree[r].begin(), le = tree[l].end(), re = tree[r].end();
-	while (lt != le && rt != re) {
-		if (*lt < *rt)
+	while (lt != le || rt != re) {
+		if (rt == re)
 			tree[i].push_back(*lt), lt++;
-		else
+		else if (lt == le)
 			tree[i].push_back(*rt), rt++;
+		else {
+			if (*lt < *rt)
+				tree[i].push_back(*lt), lt++;
+			else
+				tree[i].push_back(*rt), rt++;
+		}
 	}
-	if(rt == re)
-		while (lt != le)
-			tree[i].push_back(*lt), lt++;
-	else
-		while (rt != re)
-			tree[i].push_back(*rt), rt++;
 }
 void small_query(int s, int e, int l, int r, int idx, int x)
 {
@@ -42,43 +102,48 @@ void small_query(int s, int e, int l, int r, int idx, int x)
 	small_query((s + e) / 2 + 1, e, l, r, idx * 2 + 1, x);
 }
 int query(int l, int r, int k) {
-	if (l == r) return arr[l];
-	int ret = 1, lo = -100000000, hi = 100000000;
-	while (lo < hi) {
+	int ret = 0, lo = -1000000000, hi = 1000000000;
+	while (true) {
 		lower = upper = 0;
-		if (lo + hi < 0) ret = (lo + hi - 1)/2;
-		else ret = (lo + hi) / 2;
-		//printf("ret, lo, hi = %d, %d, %d\n", ret, lo, hi);
+		if (lo + hi < 0)
+			ret = (lo + hi - 1) / 2;
+		else
+			ret = (lo + hi) / 2;
 		small_query(1, n, l, r, 1, ret);
-		lower < k ? lo = ret : hi = ret;
-		if (lower == k - 1 && binary_search(v.begin(), v.end(), ret))
+		if (lower == k - 1 && upper == k)
 			break;
+		lower < k ? lo = ret : hi = ret;
 	}
 	return ret;
 }
 int main()
 {
-	FILE *fp = fopen("C:\\output.txt", "r");
-	FILE *fp1 = fopen("C:\\input.txt", "r");
+	FILE *fp1 = fopen("input7469.txt", "r");
+	FILE *fp2 = fopen("output7469.txt", "r");
 	fscanf(fp1, "%d%d", &n, &m);
 	tree.resize(n * 4);
-	for (int i = 1; i <= n; i++) {
+	for (int i = 1; i <= n; i++)
 		fscanf(fp1, "%d", arr + i);
-		v.push_back(arr[i]);
-	}
-	sort(v.begin(), v.end());
+	long st = clock();
 	tree_init(1, n, 1);
+	long ed = clock();
+	printf("init=%.3f\n", (ed - st) / (double)CLOCKS_PER_SEC);
+	double qry = 0;
 	for (int i = 0; i < m; i++) {
-		int tmp;
-		fscanf(fp, "%d", &tmp);
 		int l, r, k;
+		int res;
+		fscanf(fp2, "%d", &res);
 		fscanf(fp1, "%d%d%d", &l, &r, &k);
-		if (query(l, r, k) == tmp) printf("O");
+
+		st = clock();
+		if (query(l, r, k) == res) printf("O");
 		else printf("X");
-		//printf("%d\n", query(l, r, k));
+		ed = clock();
+		qry += (ed - st) / (double)CLOCKS_PER_SEC;
 	}
-	fclose(fp);
+	printf("qry=%.3lf\n", qry);
 	fclose(fp1);
+	fclose(fp2);
 	return 0;
 }
 /*

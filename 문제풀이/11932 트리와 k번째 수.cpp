@@ -87,23 +87,13 @@ int query(int s, int e, int k) {
 	return ret;
 }
 void build() {
-	long st = clock();
 	maketree(1, 0);
-	long ed = clock();
-	printf("maketree=%.3f\n", (ed - st) / (double)CLOCKS_PER_SEC);
-	st = clock();
 	HLD(1, 0);
-	ed = clock();
-	printf("HLD=%.3f\n", (ed - st) / (double)CLOCKS_PER_SEC);
-	st = clock();
-	printf("divtree_size = %d\n", divtree_size);
 	tree_init(1, divtree_size - 1, 1);
-	ed = clock();
-	printf("init=%.3f\n", (ed - st) / (double)CLOCKS_PER_SEC);
 }
 int main()
 {
-	FILE *fp = fopen("..\\testcase\\input.txt", "r");
+	FILE *fp = fopen("..\\testcase\\input11932.txt", "r");
 	fscanf(fp, "%d%d", &n, &m);
 	starts[0] = starts[1] = parents[0] = parents[1] = 1;
 	for (int i = 1; i <= n; i++)
@@ -118,12 +108,17 @@ int main()
 	build();
 	long ed = clock();
 	printf("build=%.3f\n", (ed - st) / (double)CLOCKS_PER_SEC);
+
+	double qry = 0;
 	for (int i = 0; i < m; i++) {
 		int x, y, k;
 		fscanf(fp, "%d%d%d", &x, &y, &k);
+		st = clock();
 		query(x, y, k);
-		//printf("%d\n", query(x, y, k));
+		ed = clock();
+		qry += (ed - st) / (double)CLOCKS_PER_SEC;
 	}
+	printf("query: %.3lf\n", qry);
 	return 0;
 }
 /*
