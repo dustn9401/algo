@@ -1,6 +1,15 @@
-#include <iostream>
+#include <cstdio>
+#include <vector>
+#include <algorithm>
 using namespace std;
+typedef struct {
+	int e, w;
+}edge;
+vector<vector<edge>> adj(100001);
+int main()
+{
 
+}
 /*
 문제
 어떤 그래프가 있다. 여기에 크루스칼이 공을 놓으려고 한다.
