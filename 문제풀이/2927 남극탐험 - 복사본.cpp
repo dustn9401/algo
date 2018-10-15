@@ -114,26 +114,24 @@ int main()
 		if (v[i].str[0] == 'b') {
 			fgets(buf, 80, fp);
 			if (find(v[i].a) ^ find(v[i].b)) {
-				//if (buf[0] == 'y') printf("O");
-				//else printf("X");
-				merge(v[i].a, v[i].b);
+				if (buf[0] == 'y') printf("O"), merge(v[i].a, v[i].b);
+				else printf("X");
 			}
 			else {
-				//if (buf[0] == 'n') printf("O");
-				//else printf("X");
+				if (buf[0] == 'n') printf("O");
+				else printf("X");
 			}
 		}
 		if (v[i].str[0] == 'e') {
 			fgets(buf, 80, fp);
 			if (find(v[i].a) ^ find(v[i].b)) {
-				//if (buf[0] == 'i') printf("O");
-				//else printf("X");
+				if (buf[0] == 'i') printf("O");
+				else printf("X");
 			}
 			else {
-				query(v[i].a, v[i].b);
-				//string ans = to_string(query(v[i].a, v[i].b));
-				//if (strncmp(buf, ans.c_str(), ans.length()) == 0) printf("O");
-				//else printf("X");
+				string ans = to_string(query(v[i].a, v[i].b));
+				if (strncmp(buf, ans.c_str(), ans.length()) == 0) printf("O");
+				else printf("X");
 			}
 		}
 	}

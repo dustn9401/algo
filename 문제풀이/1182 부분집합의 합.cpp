@@ -1,21 +1,17 @@
 #include <cstdio>
 int n, s, arr[21], res;
-int solve(int st, int rem) {
-	int ret = arr[st];
-	if (!rem) return ret;
-	for (int i = st + 1; i <= n; i++) {
-		if ((ret += solve(i, rem - 1)) == s)
-			res++;
-	}
-	return ret;
-}
 int main()
 {
 	scanf("%d%d", &n, &s);
+	int bit = 1 << n;
 	for (int i = 1; i <= n; i++)
 		scanf("%d", arr + i);
-	for (int i = 1; i <= n; i++)
-		solve(0, i);
+	for (int i = 1; i < bit; i++) {
+		int num = 0;
+		for (int j = 0; j < n; j++)
+			if ((i >> j) % 2) num += arr[j + 1];
+		if (num == s) res++;
+	}
 	printf("%d", res);
 	return 0;
 }
