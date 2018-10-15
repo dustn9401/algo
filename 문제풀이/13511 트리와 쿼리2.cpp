@@ -4,40 +4,42 @@
 #include <algorithm>
 #include <ctime>
 using namespace std;
+typedef struct node {
+	int e, w;
+}node;
 int n, m, u[100001], v[100001], w[100001], level[100001], heavy[100001], divtree_size = 1;
 int starts[100001], parents[100001];
-vector<list<int>> adj;
-vector<int> segtree(400000), idx(100001), divtrees(100001);
+vector<list<node>> adj;
+vector<int> tree(400000), idx(100001), segs(100001);
 void maketree(int cur, int bef) {
 	level[cur] = level[bef] + 1;
-	for (int i : adj[cur]) {
-		if (bef^i) maketree(i, cur), heavy[cur] += heavy[i];
+	for (node i : adj[cur]) {
+		if (bef^i.e) maketree(i.e, cur), heavy[cur] += heavy[i.e], w[i.e] = i.w;
 	}
 	parents[cur] = bef;
 	heavy[cur]++;
 }
 void HLD(int cur, int bef) {
 	int high = 0;
-	for (int i : adj[cur])
-		if (bef^i && heavy[i] > heavy[high])
-			high = i;
-	for (int i : adj[cur])
-		if (bef^i && i != high)
-			starts[i] = i, HLD(i, cur);
-	if (high)
-		starts[high] = starts[cur], HLD(high, cur);
-	divtrees[divtree_size] = cur;
+	for (node i : adj[cur])
+		if (bef^i.e && heavy[i.e] > heavy[high])
+			high = i.e;
+	for (node i : adj[cur])
+		if (bef^i.e && i.e != high)
+			starts[i.e] = i.e, HLD(i.e, cur);
+	if (high) starts[high] = starts[cur], HLD(high, cur);
+	segs[divtree_size] = cur;
 	idx[cur] = divtree_size++;
 }
-int make_segtree(int l, int r, int idx) {
-	if (l == r) return segtree[idx] = node_weights[divtrees[l]];
-	return segtree[idx] = make_segtree(l, (l + r) / 2, idx * 2) + make_segtree((l + r) / 2 + 1, r, idx * 2 + 1);
+int make_tree(int l, int r, int idx) {
+	if (l == r) return tree[idx] = w[segs[l]];
+	return tree[idx] = make_tree(l, (l + r) / 2, idx * 2) + make_tree((l + r) / 2 + 1, r, idx * 2 + 1);
 }
 int small_query(int st, int ed, int l, int r, int cur) {
 	if (r < st || l > ed)
 		return 0;
 	if (l >= st && r <= ed)
-		return segtree[cur];
+		return tree[cur];
 	return small_query(st, ed, l, (l + r) / 2, cur * 2) + small_query(st, ed, (l + r) / 2 + 1, r, cur * 2 + 1);
 }
 int query(int st, int ed, int k) {
@@ -61,12 +63,12 @@ int main()
 	starts[0] = starts[1] = parents[0] = parents[1] = 1;
 	for (int i = 1; i < n; i++) {
 		scanf("%d%d%d", u + i, v + i, w + i);
-		adj[v[i]].push_back(u[i]);
-		adj[u[i]].push_back(v[i]);
+		adj[v[i]].push_back({ u[i], w[i] });
+		adj[u[i]].push_back({ v[i], w[i] });
 	}
 	maketree(1, 0);
 	HLD(1, 0);
-	make_segtree(1, divtree_size - 1, 1);
+	make_tree(1, divtree_size - 1, 1);
 	scanf("%d", &m);
 	for (int i = 0; i < m; i++) {
 		int a, b, c, k;
