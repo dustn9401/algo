@@ -40,7 +40,7 @@ int update(int l, int r, int t, int d, int i) {
 }
 int small_query(int l, int r, int s, int e, int i) {
 	if (l > e || r < s) return 0;
-	else if (l >= s && r <= e) return tree[i];
+	if (l >= s && r <= e) return tree[i];
 	return small_query(l, (l + r) / 2, s, e, i * 2) + small_query((l + r) / 2 + 1, r, s, e, i * 2 + 1);
 }
 int query(int s, int e) {
@@ -90,18 +90,19 @@ int main()
 				adj[v[i].b].push_back(v[i].a);
 				merge(v[i].a, v[i].b);}}}
 	build();
+
 	set_init();
 	for (int i = 0; i < k; i++) {
 		if (v[i].str[0] == 'p') {
-			update(1, sz - 1, v[i].a, v[i].b, 1);
+			update(1, sz - 1, idx[v[i].a], v[i].b, 1);
 		}
-		if (v[i].str[0] == 'b') {
+		else if (v[i].str[0] == 'b') {
 			if (find(v[i].a) ^ find(v[i].b))
 				printf("yes\n"), merge(v[i].a, v[i].b);
 			else
 				printf("no\n");
 		}
-		if (v[i].str[0] == 'e') {
+		else {
 			if (find(v[i].a) ^ find(v[i].b))
 				printf("impossible\n");
 			else 
@@ -113,7 +114,7 @@ int main()
 /*
 5
 4 2 4 5 6
-9
+11
 excursion 1 1
 excursion 1 2
 bridge 1 2

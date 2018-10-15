@@ -109,31 +109,31 @@ int main()
 	for (int i = 0; i < k; i++) {
 		char buf[80];
 		if (v[i].str[0] == 'p') {
-			update(1, sz - 1, v[i].a, v[i].b, 1);
-			w[v[i].a] = v[i].b;
+			update(1, sz - 1, idx[v[i].a], v[i].b, 1);
 		}
 		if (v[i].str[0] == 'b') {
 			fgets(buf, 80, fp);
 			if (find(v[i].a) ^ find(v[i].b)) {
-				if (buf[0] == 'y') printf("O");
-				else printf("X");
+				//if (buf[0] == 'y') printf("O");
+				//else printf("X");
 				merge(v[i].a, v[i].b);
 			}
 			else {
-				if (buf[0] == 'n') printf("O");
-				else printf("X");
+				//if (buf[0] == 'n') printf("O");
+				//else printf("X");
 			}
 		}
 		if (v[i].str[0] == 'e') {
 			fgets(buf, 80, fp);
 			if (find(v[i].a) ^ find(v[i].b)) {
-				if (buf[0] == 'i') printf("O");
-				else printf("X");
+				//if (buf[0] == 'i') printf("O");
+				//else printf("X");
 			}
 			else {
-				string ans = to_string(query(v[i].a, v[i].b));
-				if (strncmp(buf, ans.c_str(), ans.length()) == 0) printf("O");
-				else printf("X");
+				query(v[i].a, v[i].b);
+				//string ans = to_string(query(v[i].a, v[i].b));
+				//if (strncmp(buf, ans.c_str(), ans.length()) == 0) printf("O");
+				//else printf("X");
 			}
 		}
 	}

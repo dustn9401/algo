@@ -5,7 +5,7 @@ import sys
 sys.setrecursionlimit(1000000)
 
 n,m=30000,300000
-f = open('C:\\input2927.txt', 'w')
+f = open('..\\input2927.txt', 'w')
 f.write('%d\n' % (n))
 for i in range(n):
     f.write('%d '%(random.randint(0,1000)))
