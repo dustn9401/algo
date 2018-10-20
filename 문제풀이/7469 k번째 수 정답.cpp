@@ -1,41 +1,31 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <set>
 using namespace std;
 
 int arr[100001], lower, upper, n, m;
 vector<int> v;
-vector<vector<int>> tree;
+vector<set<int>> tree;
 
 void tree_init(int s, int e, int i) {
 	if (s == e) {
-		tree[i].push_back(arr[s]);
+		tree[i].insert(arr[s]);
 		return;
 	}
 	int l = i * 2, r = i * 2 + 1;
 	tree_init(s, (s + e) / 2, l);
 	tree_init((s + e) / 2 + 1, e, r);
-	auto lt = tree[l].begin(), rt = tree[r].begin(), le = tree[l].end(), re = tree[r].end();
-	while (lt != le || rt != re) {
-		if (rt == re)
-			tree[i].push_back(*lt), lt++;
-		else if (lt == le)
-			tree[i].push_back(*rt), rt++;
-		else {
-			if (*lt < *rt)
-				tree[i].push_back(*lt), lt++;
-			else
-				tree[i].push_back(*rt), rt++;
-		}
-	}
+	for (int num : tree[l]) tree[i].insert(num);
+	for (int num : tree[r]) tree[i].insert(num);
 }
 void small_query(int s, int e, int l, int r, int idx, int x)
 {
 	if (s > r || e < l)
 		return;
 	if (s >= l && e <= r) {
-		lower += distance(tree[idx].begin(), lower_bound(tree[idx].begin(), tree[idx].end(), x));
-		upper += distance(tree[idx].begin(), upper_bound(tree[idx].begin(), tree[idx].end(), x));
+		lower += distance(tree[idx].begin(), tree[idx].lower_bound(x));
+		upper += distance(tree[idx].begin(), tree[idx].upper_bound(x));
 		return;
 	}
 	small_query(s, (s + e) / 2, l, r, idx * 2, x);

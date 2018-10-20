@@ -21,17 +21,20 @@ int main()
 			else if (v[lo].x == v[i].x && v[lo].y > v[i].y) lo = i;
 		}
 	}
-	sort(v.begin(), v.end(), [&](point a, point b) { return v[lo].x*a.y - v[lo].y - a.x < v[lo].x*b.y - v[lo].y - b.x; });
-	for (auto i : v) {
-		
+	int hx = lo, hy = lo;
+	for (auto i = v.begin(); i != v.end(); i++) {
+		if (i->x == v[lo].x && i->y != v[lo].y) {
+			if(hi < i->y)
+		}
 	}
+	sort(v.begin(), v.end(), [&](point a, point b) { return v[lo].x*a.y - v[lo].y - a.x < v[lo].x*b.y - v[lo].y - b.x; });
 }
 /*
 문제
 
 때때로 주어진 점들 사이에서 볼록 껍질(Convex Hull)을 찾아내는 기술은 요긴하게 쓰인다.
 ACM 월드파이널에서 볼록 껍질을 응용해야 하는 문제가 출제되다 보니, 이걸 할 줄 아는 것은 참가자의 소양이 되었다.
-이 작업은 크게 두 단계의 과정으로 이루어진다. 
+이 작업은 크게 두 단계의 과정으로 이루어진다.
 첫 번째 단계는 볼록 껍질을 이루는 점들을 찾아내는 것이고, 두 번째 단계는 이 점들을 반시계 방향으로 순서를 매기는 것이다.
 첫 번째 단계는 이미 완료되었다고 할 때, 두 번째 단계를 수행하는 프로그램을 작성하시오.
 
