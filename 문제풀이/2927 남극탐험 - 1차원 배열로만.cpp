@@ -1,14 +1,15 @@
 #include <cstdio>
+#include <cmath>
 #include <vector>
-#include <cstring>
 #include <algorithm>
 #define MAXN 30001
+#define MAXK 300000
 using namespace std;
-char qc[MAXN];
 int n, k, sz = 1;
 vector<vector<int>> adj(MAXN);
-int qa[MAXN], qb[MAXN], set_par[MAXN], set_hv[MAXN], tree[MAXN * 4], w[MAXN], segs[MAXN], hv[MAXN], idx[MAXN];
-vector<int> par(MAXN, 1), st(MAXN, 1);
+char qc[MAXK];
+int qa[MAXK], qb[MAXK], set_par[MAXN], set_hv[MAXN], tree[MAXN * 4], w[MAXN], segs[MAXN],
+hv[MAXN], idx[MAXN], tree_root_idx[MAXN], par[MAXN], st[MAXN], ed[MAXN];
 void calc(int c, int b) {
 	for (int i : adj[c])
 		if (i^b) calc(i, c), hv[c] += hv[i];
@@ -20,7 +21,8 @@ void HLD(int c, int b) {
 		if (i^b && hv[hi] < hv[i]) hi = i;
 	for (int i : adj[c])
 		if (i^b && i^hi) st[i] = i, HLD(i, c);
-	if (hi) st[hi] = st[c], HLD(hi, c);
+	if (hi) st[hi] = st[c], HLD(hi, c), ed[c] = ed[hi];
+	else ed[c] = c;
 	segs[sz] = c, idx[c] = sz++;
 }
 int init(int l, int r, int i) {
@@ -41,14 +43,14 @@ int query(int s, int e) {
 	int ret = 0;
 	while (st[s] ^ st[e]) {
 		if (hv[st[s]] > hv[st[e]]) swap(s, e);
-		ret += small_query(1, n, idx[s], idx[st[s]], 1);
+		ret += small_query(idx[ed[s]], idx[st[s]], idx[s], idx[st[s]], tree_root_idx[s]);
 		s = par[st[s]];
 	}
 	if (hv[s] > hv[e]) swap(s, e);
-	return ret += small_query(1, n, idx[s], idx[e], 1);
+	return ret += small_query(idx[ed[s]], idx[st[s]], idx[s], idx[e], tree_root_idx[s]);
 }
 void set_init() {
-	for (int i = 0; i <= n; i++) 
+	for (int i = 0; i <= n; i++)
 		set_par[i] = i, set_hv[i] = 1;
 }
 int find(int vtx) {
@@ -64,21 +66,26 @@ void merge(int s1, int s2) {
 }
 void build() {
 	for (int i = 1; i <= n; i++)
-		if (!idx[i]) calc(i, i), HLD(i, i);
-	init(1, n, 1);
+		if (!idx[i]) st[i] = par[i] = i, calc(i, i), HLD(i, i);
+	int s = 1, e = idx[st[segs[s]]], rt = 1;
+	while (true) {
+		for (int i = s; i <= e; i++) tree_root_idx[segs[i]] = rt;
+		init(s, e, rt);
+		rt += (e - s) * 2 + 1, s = e + 1;
+		if (s < sz) e = idx[st[segs[s]]];
+		else break;
+	}
 }
 int main()
 {
-	FILE *fin = fopen("..\\testcase\\input2927.txt", "r");
-	fscanf(fin, "%d", &n);
-
+	scanf("%d", &n);
 	for (int i = 1; i <= n; i++)
-		fscanf(fin, "%d", w + i);
-	fscanf(fin, "%d", &k);
+		scanf("%d", w + i);
+	scanf("%d", &k);
 	char buf[10];
 	set_init();
 	for (int i = 0; i < k; i++) {
-		fscanf(fin, "%s%d%d", buf, qa + i, qb + i);
+		scanf("%s%d%d", buf, qa + i, qb + i);
 		qc[i] = buf[0];
 		if (qc[i] == 'b') {
 			if (find(qa[i]) ^ find(qb[i])) {
@@ -86,42 +93,26 @@ int main()
 				adj[qb[i]].push_back(qa[i]);
 				merge(qa[i], qb[i]);
 			}}}
-	fclose(fin);
+
 	build();
 	set_init();
-	FILE *fout = fopen("..\\testcase\\output2927.txt", "r");
 	for (int i = 0; i < k; i++) {
 		if (qc[i] == 'p') {
-			update(1, n, idx[qa[i]], qb[i], 1);
+			update(idx[ed[qa[i]]], idx[st[qa[i]]], idx[qa[i]], qb[i], tree_root_idx[qa[i]]);
 		}
 		else if (qc[i] == 'b') {
-			fscanf(fout, "%s", buf);
-			if (find(qa[i]) ^ find(qb[i])) {
-				if (buf[0] == 'y') printf("O");
-				else printf("X");
-				merge(qa[i], qb[i]);
-			}
-			else {
-				if (buf[0] == 'n') printf("O");
-				else printf("X");
-			}
+			if (find(qa[i]) ^ find(qb[i]))
+				puts("yes"), merge(qa[i], qb[i]);
+			else
+				puts("no");
 		}
 		else {
-			if (find(qa[i]) ^ find(qb[i])) {
-				fscanf(fout, "%s", buf);
-				if (buf[0] == 'i') printf("O");
-				else printf("X");
-			}
-			else {
-				int res;
-				fscanf(fout, "%d", &res);
-				if (query(qa[i], qb[i]) == res) printf("O");
-				else printf("X");
-				//printf("%d\n", query(qa[i], qb[i]));
-			}
+			if (find(qa[i]) ^ find(qb[i]))
+				puts("impossible");
+			else
+				printf("%d\n", query(qa[i], qb[i]));
 		}
 	}
-	fclose(fout);
 	return 0;
 }
 /*

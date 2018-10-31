@@ -1,52 +1,73 @@
 #include <cstdio>
 #include <vector>
-#include <cstring>
 #include <algorithm>
 #define MAXN 30001
-#define MAXQ 300000
+#define MAXK 300000
 using namespace std;
-char qc[MAXQ];
-int n, k, sz = 1;
-vector<vector<int>> adj(MAXN);
-int qa[MAXQ], qb[MAXQ], set_par[MAXN], set_hv[MAXN], tree[MAXN * 4], w[MAXN], segs[MAXN], hv[MAXN], idx[MAXN];
-vector<int> par(MAXN, 1), st(MAXN, 1);
-void calc(int c, int b) {
-	for (int i : adj[c])
-		if (i^b) calc(i, c), hv[c] += hv[i];
-	par[c] = b, hv[c]++;
+
+int n, k, sz;
+char qc[MAXK];
+int qa[MAXK], qb[MAXK], set_par[MAXN], set_hv[MAXN], heavy[MAXN], tree_idx[MAXN], idx[MAXN], weights[MAXN], start[MAXN], par[MAXN];
+vector<vector<int>> segtrees, divtrees, adj;
+void maketree(int cur, int bef) {
+	for (int i : adj[cur])
+		if (bef^i) maketree(i, cur), heavy[cur] += heavy[i];
+	par[cur] = bef;
+	heavy[cur]++;
 }
-void HLD(int c, int b) {
-	int hi = 0;
-	for (int i : adj[c])
-		if (i^b && hv[hi] < hv[i]) hi = i;
-	for (int i : adj[c])
-		if (i^b && i^hi) st[i] = i, HLD(i, c);
-	if (hi) st[hi] = st[c], HLD(hi, c);
-	segs[sz] = c, idx[c] = sz++;
+void HLD(int cur, int bef, int tidx) {
+	int high = 0;
+	for (int i : adj[cur])
+		if (i^bef && heavy[i] > heavy[high])
+			high = i;
+	for (int i : adj[cur])
+		if (i^bef && i^high) start[i] = i, HLD(i, cur, sz++);
+	if (high) start[high] = start[cur], HLD(high, cur, tidx);
+	idx[cur] = divtrees[tidx].size();
+	tree_idx[cur] = tidx;
+	divtrees[tidx].push_back(cur);
 }
-int init(int l, int r, int i) {
-	if (l == r) return tree[i] = w[segs[l]];
-	return tree[i] = init(l, (l + r) / 2, i * 2) + init((l + r) / 2 + 1, r, i * 2 + 1);
+int seg(int l, int r, int idx, int tree_idx) {
+	if (l == r)
+		return segtrees[tree_idx][idx] = weights[divtrees[tree_idx][l]];
+	return segtrees[tree_idx][idx] = seg(l, (l + r) / 2, idx * 2, tree_idx) + seg((l + r) / 2 + 1, r, idx * 2 + 1, tree_idx);
 }
-int update(int l, int r, int t, int d, int i) {
-	if (l > t || r < t) return tree[i];
-	if (l == r) return tree[i] = d;
-	return tree[i] = update(l, (l + r) / 2, t, d, i * 2) + update((l + r) / 2 + 1, r, t, d, i * 2 + 1);
-}
-int small_query(int l, int r, int s, int e, int i) {
-	if (l > e || r < s) return 0;
-	if (l >= s && r <= e) return tree[i];
-	return small_query(l, (l + r) / 2, s, e, i * 2) + small_query((l + r) / 2 + 1, r, s, e, i * 2 + 1);
-}
-int query(int s, int e) {
-	int ret = 0;
-	while (st[s] ^ st[e]) {
-		if (hv[st[s]] > hv[st[e]]) swap(s, e);
-		ret += small_query(1, n, idx[s], idx[st[s]], 1);
-		s = par[st[s]];
+void make_segtree() {
+	for (int i = 0; i < sz; i++) {
+		if (divtrees[i].size() == 1) continue;
+		segtrees[i].resize(divtrees[i].size() * 4);
+		seg(1, divtrees[i].size() - 1, 1, i);
 	}
-	if (hv[s] > hv[e]) swap(s, e);
-	return ret += small_query(1, n, idx[s], idx[e], 1);
+}
+int update(int st, int ed, int idx, int change, int cur, int tree_idx) {
+	if (st > idx || ed < idx)
+		return segtrees[tree_idx][cur];
+	if (st == ed)
+		return segtrees[tree_idx][cur] = change;
+	return segtrees[tree_idx][cur] =
+		update(st, (st + ed) / 2, idx, change, cur * 2, tree_idx) + update((st + ed) / 2 + 1, ed, idx, change, cur * 2 + 1, tree_idx);
+}
+int small_query(int st, int ed, int l, int r, int cur, int tree_idx) {
+	if (r < st || l > ed)
+		return 0;
+	if (l >= st && r <= ed)
+		return segtrees[tree_idx][cur];
+	return small_query(st, ed, l, (l + r) / 2, cur * 2, tree_idx) + small_query(st, ed, (l + r) / 2 + 1, r, cur * 2 + 1, tree_idx);
+}
+int query(int st, int ed) {
+	int ret = 0;
+	while (start[st] ^ start[ed]) {
+		if (heavy[start[st]] > heavy[start[ed]]) swap(st, ed);
+		ret += small_query(idx[st], idx[start[st]], 1, idx[start[st]], 1, tree_idx[st]);
+		st = par[start[st]];
+	}
+	if (heavy[st] > heavy[ed]) swap(st, ed);
+	return ret + small_query(idx[st], idx[ed], 1, divtrees[tree_idx[st]].size() - 1, 1, tree_idx[st]);
+}
+void build() {
+	for (int i = 1; i <= n; i++)
+		if (!idx[i]) start[i] = par[i] = i, maketree(i, i), HLD(i, i, sz++);
+	make_segtree();
 }
 void set_init() {
 	for (int i = 0; i <= n; i++)
@@ -63,19 +84,15 @@ void merge(int s1, int s2) {
 	set_par[s1] = s2;
 	if (set_hv[s1] == set_hv[s2]) set_hv[s2]++;
 }
-void build() {
-	for (int i = 1; i <= n; i++)
-		if (!idx[i]) calc(i, i), HLD(i, i);
-	init(1, n, 1);
-}
 int main()
 {
 	scanf("%d", &n);
+	adj.resize(n + 1), segtrees.resize(n + 1), divtrees.assign(n + 1, { 0 });
 	for (int i = 1; i <= n; i++)
-		scanf("%d", w + i);
+		scanf("%d", weights + i);
 	scanf("%d", &k);
-	char buf[10];
 	set_init();
+	char buf[10];
 	for (int i = 0; i < k; i++) {
 		scanf("%s%d%d", buf, qa + i, qb + i);
 		qc[i] = buf[0];
@@ -85,12 +102,11 @@ int main()
 				adj[qb[i]].push_back(qa[i]);
 				merge(qa[i], qb[i]);
 			}}}
-
 	build();
 	set_init();
 	for (int i = 0; i < k; i++) {
 		if (qc[i] == 'p') {
-			update(1, n, idx[qa[i]], qb[i], 1);
+			update(1, divtrees[tree_idx[qa[i]]].size() - 1, idx[qa[i]], qb[i], 1, tree_idx[qa[i]]);
 		}
 		else if (qc[i] == 'b') {
 			if (find(qa[i]) ^ find(qb[i]))
