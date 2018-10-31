@@ -3,13 +3,13 @@
 #include <cstring>
 #include <algorithm>
 #define MAXN 30001
+#define MAXQ 300000
 using namespace std;
-int qa[MAXN], qb[MAXN], parent[MAXN], num[MAXN];
-char qc[MAXN];
+char qc[MAXQ];
 int n, k, sz = 1;
 vector<vector<int>> adj(MAXN);
-vector<int> tree(MAXN * 4), w(MAXN);
-vector<int> segs(MAXN), hv(MAXN, 0), par(MAXN, 1), st(MAXN, 1), idx(MAXN, 0);
+int qa[MAXQ], qb[MAXQ], set_par[MAXN], set_hv[MAXN], tree[MAXN * 4], w[MAXN], segs[MAXN], hv[MAXN], idx[MAXN];
+vector<int> par(MAXN, 1), st(MAXN, 1);
 void calc(int c, int b) {
 	for (int i : adj[c])
 		if (i^b) calc(i, c), hv[c] += hv[i];
@@ -20,10 +20,9 @@ void HLD(int c, int b) {
 	for (int i : adj[c])
 		if (i^b && hv[hi] < hv[i]) hi = i;
 	for (int i : adj[c])
-		if (i^b && i != hi) st[i] = i, HLD(i, c);
+		if (i^b && i^hi) st[i] = i, HLD(i, c);
 	if (hi) st[hi] = st[c], HLD(hi, c);
-	segs[sz] = c;
-	idx[c] = sz++;
+	segs[sz] = c, idx[c] = sz++;
 }
 int init(int l, int r, int i) {
 	if (l == r) return tree[i] = w[segs[l]];
@@ -43,39 +42,40 @@ int query(int s, int e) {
 	int ret = 0;
 	while (st[s] ^ st[e]) {
 		if (hv[st[s]] > hv[st[e]]) swap(s, e);
-		ret += small_query(1, sz - 1, idx[s], idx[st[s]], 1);
+		ret += small_query(1, n, idx[s], idx[st[s]], 1);
 		s = par[st[s]];
 	}
 	if (hv[s] > hv[e]) swap(s, e);
-	return ret += small_query(1, sz - 1, idx[s], idx[e], 1);
+	return ret += small_query(1, n, idx[s], idx[e], 1);
 }
-int find(int vertex) {
-	int p, s, i;
-	for (i = vertex; (p = parent[i]) >= 0; i = p); s = i;
-	for (i = vertex; (p = parent[i]) >= 0; i = p) parent[i] = s;
-	return s;
+void set_init() {
+	for (int i = 0; i <= n; i++)
+		set_par[i] = i, set_hv[i] = 1;
+}
+int find(int vtx) {
+	if (vtx == set_par[vtx]) return vtx;
+	return set_par[vtx] = find(set_par[vtx]);
 }
 void merge(int s1, int s2) {
-	if (num[s1] > num[s2])
-		parent[s1] = s2, num[s2] += num[s1];
-	else
-		parent[s2] = s1, num[s1] += num[s2];
+	s1 = find(s1), s2 = find(s2);
+	if (s1 == s2) return;
+	if (set_hv[s1] > set_hv[s2]) swap(s1, s2);
+	set_par[s1] = s2;
+	if (set_hv[s1] == set_hv[s2]) set_hv[s2]++;
 }
 void build() {
 	for (int i = 1; i <= n; i++)
-		if(!idx[i]) calc(i, i), HLD(i, i);
-	init(1, sz - 1, 1);
+		if (!idx[i]) calc(i, i), HLD(i, i);
+	init(1, n, 1);
 }
 int main()
 {
 	scanf("%d", &n);
-	memset(parent, -1, sizeof(parent));
-	memset(num, -1, sizeof(num));
-
 	for (int i = 1; i <= n; i++)
-		scanf("%d", &w[i]);
+		scanf("%d", w + i);
 	scanf("%d", &k);
 	char buf[10];
+	set_init();
 	for (int i = 0; i < k; i++) {
 		scanf("%s%d%d", buf, qa + i, qb + i);
 		qc[i] = buf[0];
@@ -84,15 +84,13 @@ int main()
 				adj[qa[i]].push_back(qb[i]);
 				adj[qb[i]].push_back(qa[i]);
 				merge(qa[i], qb[i]);
-			}
-		}
-	}
+			}}}
+
 	build();
-	memset(parent, -1, sizeof(parent));
-	memset(num, -1, sizeof(num));
+	set_init();
 	for (int i = 0; i < k; i++) {
 		if (qc[i] == 'p') {
-			update(1, sz - 1, idx[qa[i]], qb[i], 1);
+			update(1, n, idx[qa[i]], qb[i], 1);
 		}
 		else if (qc[i] == 'b') {
 			if (find(qa[i]) ^ find(qb[i]))
