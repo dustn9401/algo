@@ -73,8 +73,8 @@ int query(int st, int ed) {
 }
 int main()
 {
-	FILE *fp1 = fopen("..\\testcase\\input13510.txt", "r");
-	FILE *fp = fopen("..\\testcase\\output13510.txt", "w");
+	FILE *fp1 = fopen("C:\\input13510.txt", "r");
+	FILE *fp = fopen("C:\\output13510.txt", "w");
 	fscanf(fp1, "%d", &n);
 	adj.resize(n + 1),
 		idx_in_divtree.resize(n + 1),

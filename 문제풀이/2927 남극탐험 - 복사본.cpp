@@ -5,17 +5,12 @@
 #include <string>
 #define MAXN 30001
 using namespace std;
-typedef pair<int, int> ii;
-typedef struct {
-	char str[20];
-	int a, b;
-}qry;
+int qa[MAXN], qb[MAXN], parent[MAXN], num[MAXN];
+char qc[MAXN];
 int n, k, sz = 1;
-vector<qry> v;
 vector<vector<int>> adj(MAXN);
-vector<int> tree(MAXN * 4), w(MAXN), roots(MAXN), r(MAXN, 0);
+vector<int> tree(MAXN * 4), w(MAXN);
 vector<int> segs(MAXN), hv(MAXN, 0), par(MAXN, 1), st(MAXN, 1), idx(MAXN, 0);
-long time_s, time_e;
 void calc(int c, int b) {
 	if (hv[c]) return;
 	for (int i : adj[c])
@@ -44,7 +39,7 @@ int update(int l, int r, int t, int d, int i) {
 }
 int small_query(int l, int r, int s, int e, int i) {
 	if (l > e || r < s) return 0;
-	else if (l >= s && r <= e) return tree[i];
+	if (l >= s && r <= e) return tree[i];
 	return small_query(l, (l + r) / 2, s, e, i * 2) + small_query((l + r) / 2 + 1, r, s, e, i * 2 + 1);
 }
 int query(int s, int e) {
@@ -57,64 +52,59 @@ int query(int s, int e) {
 	if (hv[s] > hv[e]) swap(s, e);
 	return ret += small_query(1, sz - 1, idx[s], idx[e], 1);
 }
+int find(int vertex) {
+	int p, s, i = -1;
+	for (i = vertex; (p = parent[i]) >= 0; i = p); s = i;
+	for (i = vertex; (p = parent[i]) >= 0; i = p) parent[i] = s;
+	return s;
+}
+void merge(int s1, int s2) {
+	if (num[s1] > num[s2])
+		parent[s1] = s2, num[s2] += num[s1];
+	else
+		parent[s2] = s1, num[s1] += num[s2];
+}
 void build() {
 	for (int i = 1; i <= n; i++)
 		calc(i, i), HLD(i, i);
 	init(1, sz - 1, 1);
 }
-void set_init() {
-	for (int i = 1; i <= n; i++)
-		roots[i] = i;
-	r.assign(MAXN, 0);
-}
-int find(int idx) {
-	if (idx == roots[idx]) return idx;
-	return roots[idx] = find(roots[idx]);
-}
-void merge(int u, int v) {
-	u = find(u), v = find(v);
-	if (u == v)return;
-	if (r[u] > r[v]) swap(u, v);
-	roots[u] = v;
-	if (r[u] == r[v]) ++r[v];
-}
 int main()
 {
 	FILE *fp = fopen("C:\\input2927.txt", "r");
 	fscanf(fp, "%d", &n);
-	//scanf("%d", &n);
+	memset(parent, -1, sizeof(parent));
+	memset(num, -1, sizeof(num));
+
 	for (int i = 1; i <= n; i++)
-		//scanf("%d", &w[i]);
 		fscanf(fp, "%d", &w[i]);
-	//scanf("%d", &k);
 	fscanf(fp, "%d", &k);
-	v.resize(k);
-	set_init();
+	char buf[20];
 	for (int i = 0; i < k; i++) {
-		//scanf("%s%d%d", v[i].str, &v[i].a, &v[i].b);
-		fscanf(fp, "%s%d%d", v[i].str, &v[i].a, &v[i].b);
-		if (v[i].str[0] == 'b') {
-			if (find(v[i].a) ^ find(v[i].b)) {
-				adj[v[i].a].push_back(v[i].b);
-				adj[v[i].b].push_back(v[i].a);
-				merge(v[i].a, v[i].b);
+		fscanf(fp, "%s%d%d", buf, qa + i, qb + i);
+		qc[i] = buf[0];
+		if (qc[i] == 'b') {
+			if (find(qa[i]) ^ find(qb[i])) {
+				adj[qa[i]].push_back(qb[i]);
+				adj[qb[i]].push_back(qa[i]);
+				merge(qa[i], qb[i]);
 			}
 		}
 	}
 	fclose(fp);
 	build();
-	time_s = clock();
+	memset(parent, -1, sizeof(parent));
+	memset(num, -1, sizeof(num));
 	fp = fopen("C:\\output2927.txt", "r");
-	set_init();
 	for (int i = 0; i < k; i++) {
-		char buf[80];
-		if (v[i].str[0] == 'p') {
-			update(1, sz - 1, idx[v[i].a], v[i].b, 1);
+		if (qc[i] == 'p') {
+			update(1, sz - 1, idx[qa[i]], qb[i], 1);
 		}
-		if (v[i].str[0] == 'b') {
-			fgets(buf, 80, fp);
-			if (find(v[i].a) ^ find(v[i].b)) {
-				if (buf[0] == 'y') printf("O"), merge(v[i].a, v[i].b);
+		else if (qc[i] == 'b') {
+			fscanf(fp, "%s", buf);
+			if (find(qa[i]) ^ find(qb[i])) {
+				merge(qa[i], qb[i]);
+				if (buf[0] == 'y') printf("O");
 				else printf("X");
 			}
 			else {
@@ -122,21 +112,20 @@ int main()
 				else printf("X");
 			}
 		}
-		if (v[i].str[0] == 'e') {
-			fgets(buf, 80, fp);
-			if (find(v[i].a) ^ find(v[i].b)) {
+		else {
+			if (find(qa[i]) ^ find(qb[i])) {
+				fscanf(fp, "%s", buf);
 				if (buf[0] == 'i') printf("O");
 				else printf("X");
 			}
 			else {
-				string ans = to_string(query(v[i].a, v[i].b));
-				if (strncmp(buf, ans.c_str(), ans.length()) == 0) printf("O");
+				int res;
+				fscanf(fp, "%d", &res);
+				if (query(qa[i], qb[i]) == res) printf("O");
 				else printf("X");
 			}
 		}
 	}
-	time_e = clock();
-	printf("time = %.3lf\n", (time_e-time_s) / (double)CLOCKS_PER_SEC);
 	fclose(fp);
 	return 0;
 }

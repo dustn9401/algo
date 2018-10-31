@@ -1,30 +1,26 @@
 #include <cstdio>
 #include <vector>
+#include <cstring>
 #include <algorithm>
 #define MAXN 30001
 using namespace std;
-typedef struct {
-	char str[20];
-	int a, b;
-}qry;
+int qa[MAXN], qb[MAXN], parent[MAXN], num[MAXN];
+char qc[MAXN];
 int n, k, sz = 1;
-vector<qry> v;
 vector<vector<int>> adj(MAXN);
-vector<int> tree(MAXN * 4), w(MAXN), roots(MAXN), r(MAXN, 0);
+vector<int> tree(MAXN * 4), w(MAXN);
 vector<int> segs(MAXN), hv(MAXN, 0), par(MAXN, 1), st(MAXN, 1), idx(MAXN, 0);
 void calc(int c, int b) {
-	if (hv[c]) return;
 	for (int i : adj[c])
 		if (i^b) calc(i, c), hv[c] += hv[i];
 	par[c] = b, hv[c]++;
 }
 void HLD(int c, int b) {
-	if (idx[c]) return;
 	int hi = 0;
 	for (int i : adj[c])
 		if (i^b && hv[hi] < hv[i]) hi = i;
 	for (int i : adj[c])
-		if (i^b && i^hi) st[i] = i, HLD(i, c);
+		if (i^b && i != hi) st[i] = i, HLD(i, c);
 	if (hi) st[hi] = st[c], HLD(hi, c);
 	segs[sz] = c;
 	idx[c] = sz++;
@@ -53,60 +49,62 @@ int query(int s, int e) {
 	if (hv[s] > hv[e]) swap(s, e);
 	return ret += small_query(1, sz - 1, idx[s], idx[e], 1);
 }
+int find(int vertex) {
+	int p, s, i;
+	for (i = vertex; (p = parent[i]) >= 0; i = p); s = i;
+	for (i = vertex; (p = parent[i]) >= 0; i = p) parent[i] = s;
+	return s;
+}
+void merge(int s1, int s2) {
+	if (num[s1] > num[s2])
+		parent[s1] = s2, num[s2] += num[s1];
+	else
+		parent[s2] = s1, num[s1] += num[s2];
+}
 void build() {
 	for (int i = 1; i <= n; i++)
-		calc(i, i), HLD(i, i);
+		if(!idx[i]) calc(i, i), HLD(i, i);
 	init(1, sz - 1, 1);
-}
-void set_init() {
-	for (int i = 1; i <= n; i++)
-		roots[i] = i;
-	r.assign(MAXN, 0);
-}
-int find(int idx) {
-	if (idx == roots[idx]) return idx;
-	return roots[idx] = find(roots[idx]);
-}
-void merge(int u, int v) {
-	u = find(u), v = find(v);
-	if (u == v)return;
-	if (r[u] > r[v]) swap(u, v);
-	roots[u] = v;
-	if (r[u] == r[v]) ++r[v];
 }
 int main()
 {
 	scanf("%d", &n);
+	memset(parent, -1, sizeof(parent));
+	memset(num, -1, sizeof(num));
+
 	for (int i = 1; i <= n; i++)
 		scanf("%d", &w[i]);
 	scanf("%d", &k);
-	v.resize(k);
-	set_init();
+	char buf[10];
 	for (int i = 0; i < k; i++) {
-		scanf("%s%d%d", v[i].str, &v[i].a, &v[i].b);
-		if (v[i].str[0] == 'b') {
-			if (find(v[i].a) ^ find(v[i].b)) {
-				adj[v[i].a].push_back(v[i].b);
-				adj[v[i].b].push_back(v[i].a);
-				merge(v[i].a, v[i].b);}}}
-	build();
-
-	set_init();
-	for (int i = 0; i < k; i++) {
-		if (v[i].str[0] == 'p') {
-			update(1, sz - 1, idx[v[i].a], v[i].b, 1);
+		scanf("%s%d%d", buf, qa + i, qb + i);
+		qc[i] = buf[0];
+		if (qc[i] == 'b') {
+			if (find(qa[i]) ^ find(qb[i])) {
+				adj[qa[i]].push_back(qb[i]);
+				adj[qb[i]].push_back(qa[i]);
+				merge(qa[i], qb[i]);
+			}
 		}
-		else if (v[i].str[0] == 'b') {
-			if (find(v[i].a) ^ find(v[i].b))
-				printf("yes\n"), merge(v[i].a, v[i].b);
+	}
+	build();
+	memset(parent, -1, sizeof(parent));
+	memset(num, -1, sizeof(num));
+	for (int i = 0; i < k; i++) {
+		if (qc[i] == 'p') {
+			update(1, sz - 1, idx[qa[i]], qb[i], 1);
+		}
+		else if (qc[i] == 'b') {
+			if (find(qa[i]) ^ find(qb[i]))
+				puts("yes"), merge(qa[i], qb[i]);
 			else
-				printf("no\n");
+				puts("no");
 		}
 		else {
-			if (find(v[i].a) ^ find(v[i].b))
-				printf("impossible\n");
-			else 
-				printf("%d\n", query(v[i].a, v[i].b));
+			if (find(qa[i]) ^ find(qb[i]))
+				puts("impossible");
+			else
+				printf("%d\n", query(qa[i], qb[i]));
 		}
 	}
 	return 0;
